@@ -1,0 +1,41 @@
+HOW TO USE THIS FILE:
+1. Go to console.firebase.google.com → your project → Firestore Database → "Rules" tab
+2. Delete everything in the editor
+3. Paste in the rules below (between the lines)
+4. Click "Publish"
+
+This is what actually locks the system down. The website code checks things too,
+but a technical person could bypass the website — these rules run on Google's
+servers and can't be bypassed. This is the real security.
+
+What these rules do:
+- Each student can only read their OWN record (not other students' records)
+- Each student can only update the "mustChangePassword" field on their own record,
+  and only to set it to false (they can't reactivate themselves if revoked, and
+  can't touch any other field)
+- Only the admin account (aasthanursingosmanabad@gmail.com) can create new student
+  records, delete them, or change the "active" (revoke/restore) status
+
+---------- COPY BELOW THIS LINE ----------
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /students/{rollNumber} {
+
+      allow read: if request.auth != null &&
+        (request.auth.token.email == rollNumber + '@aasthanursing.local' ||
+         request.auth.token.email == 'aasthanursingosmanabad@gmail.com');
+
+      allow update: if request.auth != null &&
+        request.auth.token.email == rollNumber + '@aasthanursing.local' &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['mustChangePassword']) &&
+        request.resource.data.mustChangePassword == false;
+
+      allow create, update, delete: if request.auth != null &&
+        request.auth.token.email == 'aasthanursingosmanabad@gmail.com';
+    }
+  }
+}
+
+---------- COPY ABOVE THIS LINE ----------

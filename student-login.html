@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Login — Aastha School of Nursing</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" type="image/svg+xml" href="assets/logo-mark.svg">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a href="index.html" class="brand">
+      <img src="assets/logo-mark.svg" alt="" class="brand-mark-img" width="38" height="38">
+      <span class="brand-text">Aastha School of Nursing</span>
+    </a>
+  </div>
+</header>
+
+<main class="section">
+  <div class="wrap auth-wrap">
+    <div class="auth-card">
+      <p class="eyebrow">Student Login</p>
+      <h2>Sign in</h2>
+      <div id="loginMsg" class="form-msg error"></div>
+      <form id="loginForm">
+        <div class="field">
+          <label for="rollNumber">Roll Number</label>
+          <input type="text" id="rollNumber" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Log In</button>
+      </form>
+      <p class="field-hint" style="margin-top:16px;">First time logging in? Use the roll number and default password given to you by the office.</p>
+    </div>
+  </div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+const form = document.getElementById('loginForm');
+const msgEl = document.getElementById('loginMsg');
+
+function showError(text){
+  msgEl.textContent = text;
+  msgEl.classList.add('show');
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  msgEl.classList.remove('show');
+
+  const roll = document.getElementById('rollNumber').value.trim();
+  const password = document.getElementById('password').value;
+  if (!roll || !password) { showError('Enter your roll number and password.'); return; }
+
+  const email = rollToEmail(roll);
+  try {
+    const cred = await auth.signInWithEmailAndPassword(email, password);
+    const doc = await db.collection('students').doc(roll).get();
+
+    if (!doc.exists) {
+      await auth.signOut();
+      showError('Account not found. Please contact the office.');
+      return;
+    }
+    const data = doc.data();
+
+    if (data.active === false) {
+      await auth.signOut();
+      showError('Access revoked — fees pending. Please contact the office to restore access.');
+      return;
+    }
+    if (data.mustChangePassword) {
+      window.location.href = 'force-password-change.html';
+      return;
+    }
+    window.location.href = 'notes.html';
+  } catch (err) {
+    showError('Invalid roll number or password.');
+  }
+});
+</script>
+</body>
+</html>

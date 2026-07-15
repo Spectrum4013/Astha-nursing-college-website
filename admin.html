@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Aastha School of Nursing</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" type="image/svg+xml" href="assets/logo-mark.svg">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a href="index.html" class="brand">
+      <img src="assets/logo-mark.svg" alt="" class="brand-mark-img" width="38" height="38">
+      <span class="brand-text">Aastha School of Nursing</span>
+    </a>
+    <nav class="simple-nav" id="adminNav" style="display:none;">
+      <span class="logout-link" id="logoutBtn" style="color:#fff;">Log Out</span>
+    </nav>
+  </div>
+</header>
+
+<!-- Admin login (shown when not logged in as admin) -->
+<main class="section" id="loginView">
+  <div class="wrap auth-wrap">
+    <div class="auth-card">
+      <p class="eyebrow">Admin</p>
+      <h2>Staff Login</h2>
+      <div id="loginMsg" class="form-msg error"></div>
+      <form id="adminLoginForm">
+        <div class="field">
+          <label for="adminEmail">Email</label>
+          <input type="email" id="adminEmail" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label for="adminPassword">Password</label>
+          <input type="password" id="adminPassword" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Log In</button>
+      </form>
+    </div>
+  </div>
+</main>
+
+<!-- Admin dashboard (shown once logged in as admin) -->
+<main class="section" id="dashboardView" style="display:none;">
+  <div class="wrap">
+    <p class="eyebrow">Admin Dashboard</p>
+    <h2>Manage Students</h2>
+
+    <div class="admin-toolbar">
+      <input type="text" id="searchBox" class="admin-search" placeholder="Search roll number...">
+      <div class="admin-add">
+        <input type="text" id="newRoll" placeholder="New roll number">
+        <button id="addStudentBtn" class="btn btn-primary">+ Add Student</button>
+      </div>
+    </div>
+    <div id="adminMsg" class="form-msg error"></div>
+
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Roll Number</th>
+          <th>Access</th>
+          <th>Password</th>
+          <th>Added</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="studentTableBody">
+        <tr><td colspan="5">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+const loginView = document.getElementById('loginView');
+const dashboardView = document.getElementById('dashboardView');
+const adminNav = document.getElementById('adminNav');
+const loginMsg = document.getElementById('loginMsg');
+const adminMsg = document.getElementById('adminMsg');
+
+let allStudents = [];
+
+function showLoginError(text){
+  loginMsg.textContent = text;
+  loginMsg.classList.add('show');
+}
+function showAdminError(text){
+  adminMsg.textContent = text;
+  adminMsg.classList.add('show');
+  setTimeout(() => adminMsg.classList.remove('show'), 4000);
+}
+
+document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  loginMsg.classList.remove('show');
+  const email = document.getElementById('adminEmail').value.trim();
+  const password = document.getElementById('adminPassword').value;
+
+  if (email !== ADMIN_EMAIL) {
+    showLoginError('This login is for staff only.');
+    return;
+  }
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+  } catch (err) {
+    showLoginError('Incorrect email or password.');
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await auth.signOut();
+  window.location.reload();
+});
+
+auth.onAuthStateChanged((user) => {
+  if (user && user.email === ADMIN_EMAIL) {
+    loginView.style.display = 'none';
+    dashboardView.style.display = '';
+    adminNav.style.display = '';
+    loadStudents();
+  } else {
+    loginView.style.display = '';
+    dashboardView.style.display = 'none';
+    adminNav.style.display = 'none';
+    if (user) auth.signOut(); // logged in as a student somehow — kick out of admin
+  }
+});
+
+async function loadStudents(){
+  const snap = await db.collection('students').orderBy('dateAdded', 'desc').get();
+  allStudents = snap.docs.map(d => ({ roll: d.id, ...d.data() }));
+  renderTable(allStudents);
+}
+
+function renderTable(list){
+  const tbody = document.getElementById('studentTableBody');
+  if (list.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5">No students added yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(s => {
+    const statusPill = s.active === false
+      ? '<span class="status-pill status-revoked">Revoked</span>'
+      : '<span class="status-pill status-active">Active</span>';
+    const pwPill = s.mustChangePassword
+      ? '<span class="status-pill status-pending">Default</span>'
+      : '<span class="status-pill status-active">Set</span>';
+    const dateStr = s.dateAdded && s.dateAdded.toDate ? s.dateAdded.toDate().toLocaleDateString() : '—';
+    const toggleLabel = s.active === false ? 'Restore Access' : 'Revoke Access';
+    return `<tr>
+      <td><strong>${s.roll}</strong></td>
+      <td>${statusPill}</td>
+      <td>${pwPill}</td>
+      <td>${dateStr}</td>
+      <td><button class="toggle-btn" onclick="toggleAccess('${s.roll}', ${s.active === false})">${toggleLabel}</button></td>
+    </tr>`;
+  }).join('');
+}
+
+document.getElementById('searchBox').addEventListener('input', (e) => {
+  const q = e.target.value.trim().toLowerCase();
+  renderTable(allStudents.filter(s => s.roll.toLowerCase().includes(q)));
+});
+
+async function toggleAccess(roll, makeActive){
+  await db.collection('students').doc(roll).update({ active: makeActive });
+  await loadStudents();
+}
+
+document.getElementById('addStudentBtn').addEventListener('click', async () => {
+  const rollInput = document.getElementById('newRoll');
+  const roll = rollInput.value.trim();
+  if (!roll) { showAdminError('Enter a roll number.'); return; }
+
+  const existing = await db.collection('students').doc(roll).get();
+  if (existing.exists) { showAdminError('That roll number already exists.'); return; }
+
+  const email = rollToEmail(roll);
+  // Use a secondary, throwaway Firebase app instance so creating this user
+  // doesn't sign the admin out of their own session.
+  const secondaryApp = firebase.initializeApp(firebaseConfig, 'Secondary-' + Date.now());
+  try {
+    await secondaryApp.auth().createUserWithEmailAndPassword(email, DEFAULT_PASSWORD);
+    await secondaryApp.auth().signOut();
+    await db.collection('students').doc(roll).set({
+      active: true,
+      mustChangePassword: true,
+      dateAdded: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    rollInput.value = '';
+    await loadStudents();
+  } catch (err) {
+    showAdminError(err.code === 'auth/email-already-in-use' ? 'That roll number already has an account.' : 'Something went wrong adding this student.');
+  } finally {
+    await secondaryApp.delete();
+  }
+});
+</script>
+</body>
+</html>

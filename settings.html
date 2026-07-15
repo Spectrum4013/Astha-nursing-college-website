@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — Aastha School of Nursing</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" type="image/svg+xml" href="assets/logo-mark.svg">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a href="notes.html" class="brand">
+      <img src="assets/logo-mark.svg" alt="" class="brand-mark-img" width="38" height="38">
+      <span class="brand-text">Aastha School of Nursing</span>
+    </a>
+    <nav class="simple-nav">
+      <a href="notes.html">Notes</a>
+      <span class="logout-link" id="logoutBtn" style="color:#fff;">Log Out</span>
+    </nav>
+  </div>
+</header>
+
+<main class="section">
+  <div class="wrap auth-wrap">
+    <div class="auth-card">
+      <p class="eyebrow">Settings</p>
+      <h2>Change Password</h2>
+      <p style="margin-bottom:20px; font-size:.9rem;">Logged in as <strong id="rollDisplay"></strong>. Your roll number can't be changed — only your password.</p>
+      <div id="msg" class="form-msg error"></div>
+      <form id="settingsForm">
+        <div class="field">
+          <label for="currentPassword">Current Password</label>
+          <input type="password" id="currentPassword" autocomplete="current-password" required>
+        </div>
+        <div class="field">
+          <label for="newPassword">New Password</label>
+          <input type="password" id="newPassword" autocomplete="new-password" required minlength="6">
+        </div>
+        <div class="field">
+          <label for="confirmPassword">Confirm New Password</label>
+          <input type="password" id="confirmPassword" autocomplete="new-password" required minlength="6">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Update Password</button>
+      </form>
+    </div>
+  </div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+const form = document.getElementById('settingsForm');
+const msgEl = document.getElementById('msg');
+
+function showError(text){
+  msgEl.classList.remove('success');
+  msgEl.classList.add('error', 'show');
+  msgEl.textContent = text;
+}
+function showSuccess(text){
+  msgEl.classList.remove('error');
+  msgEl.classList.add('success', 'show');
+  msgEl.textContent = text;
+}
+
+auth.onAuthStateChanged((user) => {
+  if (!user) { window.location.href = 'student-login.html'; return; }
+  document.getElementById('rollDisplay').textContent = emailToRoll(user.email);
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await auth.signOut();
+  window.location.href = 'student-login.html';
+});
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  msgEl.classList.remove('show');
+
+  const currentPassword = document.getElementById('currentPassword').value;
+  const newPassword = document.getElementById('newPassword').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+
+  if (newPassword !== confirmPassword) { showError('New passwords do not match.'); return; }
+  if (newPassword.length < 6) { showError('Password must be at least 6 characters.'); return; }
+
+  const user = auth.currentUser;
+  const cred = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
+
+  try {
+    await user.reauthenticateWithCredential(cred);
+    await user.updatePassword(newPassword);
+    showSuccess('Password updated successfully.');
+    form.reset();
+  } catch (err) {
+    if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+      showError('Current password is incorrect.');
+    } else {
+      showError('Something went wrong. Please try again.');
+    }
+  }
+});
+</script>
+</body>
+</html>
