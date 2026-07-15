@@ -6,6 +6,9 @@
 <title>Settings — Aastha School of Nursing</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://www.gstatic.com">
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com">
+<link rel="preconnect" href="https://firestore.googleapis.com">
 <link rel="icon" type="image/svg+xml" href="assets/logo-mark.svg">
 </head>
 <body>
@@ -17,7 +20,7 @@
     </a>
     <nav class="simple-nav">
       <a href="notes.html">Notes</a>
-      <span class="logout-link" id="logoutBtn" style="color:#fff;">Log Out</span>
+      <span class="logout-link" id="logoutBtn">Log Out</span>
     </nav>
   </div>
 </header>
@@ -32,15 +35,25 @@
       <form id="settingsForm">
         <div class="field">
           <label for="currentPassword">Current Password</label>
-          <input type="password" id="currentPassword" autocomplete="current-password" required>
+          <div class="field-password">
+            <input type="password" id="currentPassword" autocomplete="current-password" required>
+            <button type="button" class="pw-toggle">Show</button>
+          </div>
         </div>
         <div class="field">
           <label for="newPassword">New Password</label>
-          <input type="password" id="newPassword" autocomplete="new-password" required minlength="6">
+          <div class="field-password">
+            <input type="password" id="newPassword" autocomplete="new-password" required minlength="8">
+            <button type="button" class="pw-toggle">Show</button>
+          </div>
+          <div class="field-hint">At least 8 characters. Tip: mix uppercase, lowercase, numbers, and a symbol for a stronger password.</div>
         </div>
         <div class="field">
           <label for="confirmPassword">Confirm New Password</label>
-          <input type="password" id="confirmPassword" autocomplete="new-password" required minlength="6">
+          <div class="field-password">
+            <input type="password" id="confirmPassword" autocomplete="new-password" required minlength="8">
+            <button type="button" class="pw-toggle">Show</button>
+          </div>
         </div>
         <button type="submit" class="btn btn-primary btn-block">Update Password</button>
       </form>
@@ -55,6 +68,7 @@
 <script>
 const form = document.getElementById('settingsForm');
 const msgEl = document.getElementById('msg');
+setupPasswordToggles();
 
 function showError(text){
   msgEl.classList.remove('success');
@@ -86,7 +100,9 @@ form.addEventListener('submit', async (e) => {
   const confirmPassword = document.getElementById('confirmPassword').value;
 
   if (newPassword !== confirmPassword) { showError('New passwords do not match.'); return; }
-  if (newPassword.length < 6) { showError('Password must be at least 6 characters.'); return; }
+
+  const check = checkPasswordStrength(newPassword);
+  if (!check.valid) { showError(check.message); return; }
 
   const user = auth.currentUser;
   const cred = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);

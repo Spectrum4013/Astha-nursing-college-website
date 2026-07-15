@@ -6,6 +6,9 @@
 <title>Admin — Aastha School of Nursing</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://www.gstatic.com">
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com">
+<link rel="preconnect" href="https://firestore.googleapis.com">
 <link rel="icon" type="image/svg+xml" href="assets/logo-mark.svg">
 </head>
 <body>
@@ -15,35 +18,12 @@
       <img src="assets/logo-mark.svg" alt="" class="brand-mark-img" width="38" height="38">
       <span class="brand-text">Aastha School of Nursing</span>
     </a>
-    <nav class="simple-nav" id="adminNav" style="display:none;">
+    <nav class="simple-nav">
       <span class="logout-link" id="logoutBtn" style="color:#fff;">Log Out</span>
     </nav>
   </div>
 </header>
 
-<!-- Admin login (shown when not logged in as admin) -->
-<main class="section" id="loginView">
-  <div class="wrap auth-wrap">
-    <div class="auth-card">
-      <p class="eyebrow">Admin</p>
-      <h2>Staff Login</h2>
-      <div id="loginMsg" class="form-msg error"></div>
-      <form id="adminLoginForm">
-        <div class="field">
-          <label for="adminEmail">Email</label>
-          <input type="email" id="adminEmail" autocomplete="username" required>
-        </div>
-        <div class="field">
-          <label for="adminPassword">Password</label>
-          <input type="password" id="adminPassword" autocomplete="current-password" required>
-        </div>
-        <button type="submit" class="btn btn-primary btn-block">Log In</button>
-      </form>
-    </div>
-  </div>
-</main>
-
-<!-- Admin dashboard (shown once logged in as admin) -->
 <main class="section" id="dashboardView" style="display:none;">
   <div class="wrap">
     <p class="eyebrow">Admin Dashboard</p>
@@ -75,69 +55,55 @@
   </div>
 </main>
 
+<main class="section" id="checkingView">
+  <div class="wrap">
+    <p>Checking access...</p>
+  </div>
+</main>
+
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
-const loginView = document.getElementById('loginView');
 const dashboardView = document.getElementById('dashboardView');
-const adminNav = document.getElementById('adminNav');
-const loginMsg = document.getElementById('loginMsg');
+const checkingView = document.getElementById('checkingView');
 const adminMsg = document.getElementById('adminMsg');
 
 let allStudents = [];
 
-function showLoginError(text){
-  loginMsg.textContent = text;
-  loginMsg.classList.add('show');
-}
 function showAdminError(text){
   adminMsg.textContent = text;
   adminMsg.classList.add('show');
   setTimeout(() => adminMsg.classList.remove('show'), 4000);
 }
 
-document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  loginMsg.classList.remove('show');
-  const email = document.getElementById('adminEmail').value.trim();
-  const password = document.getElementById('adminPassword').value;
-
-  if (email !== ADMIN_EMAIL) {
-    showLoginError('This login is for staff only.');
-    return;
-  }
-  try {
-    await auth.signInWithEmailAndPassword(email, password);
-  } catch (err) {
-    showLoginError('Incorrect email or password.');
-  }
-});
-
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   await auth.signOut();
-  window.location.reload();
+  window.location.href = 'student-login.html';
 });
 
 auth.onAuthStateChanged((user) => {
+  checkingView.style.display = 'none';
   if (user && user.email === ADMIN_EMAIL) {
-    loginView.style.display = 'none';
     dashboardView.style.display = '';
-    adminNav.style.display = '';
     loadStudents();
   } else {
-    loginView.style.display = '';
-    dashboardView.style.display = 'none';
-    adminNav.style.display = 'none';
-    if (user) auth.signOut(); // logged in as a student somehow — kick out of admin
+    // Not logged in as admin — send to the shared login page
+    window.location.href = 'student-login.html';
   }
 });
 
 async function loadStudents(){
-  const snap = await db.collection('students').orderBy('dateAdded', 'desc').get();
-  allStudents = snap.docs.map(d => ({ roll: d.id, ...d.data() }));
-  renderTable(allStudents);
+  try {
+    const snap = await db.collection('students').orderBy('dateAdded', 'desc').get();
+    allStudents = snap.docs.map(d => ({ roll: d.id, ...d.data() }));
+    renderTable(allStudents);
+  } catch (err) {
+    console.error('Load students failed:', err);
+    document.getElementById('studentTableBody').innerHTML =
+      '<tr><td colspan="5">Could not load students — ' + err.message + '</td></tr>';
+  }
 }
 
 function renderTable(list){
@@ -180,14 +146,15 @@ document.getElementById('addStudentBtn').addEventListener('click', async () => {
   const roll = rollInput.value.trim();
   if (!roll) { showAdminError('Enter a roll number.'); return; }
 
-  const existing = await db.collection('students').doc(roll).get();
-  if (existing.exists) { showAdminError('That roll number already exists.'); return; }
-
-  const email = rollToEmail(roll);
-  // Use a secondary, throwaway Firebase app instance so creating this user
-  // doesn't sign the admin out of their own session.
-  const secondaryApp = firebase.initializeApp(firebaseConfig, 'Secondary-' + Date.now());
+  let secondaryApp;
   try {
+    const existing = await db.collection('students').doc(roll).get();
+    if (existing.exists) { showAdminError('That roll number already exists.'); return; }
+
+    const email = rollToEmail(roll);
+    // Use a secondary, throwaway Firebase app instance so creating this user
+    // doesn't sign the admin out of their own session.
+    secondaryApp = firebase.initializeApp(firebaseConfig, 'Secondary-' + Date.now());
     await secondaryApp.auth().createUserWithEmailAndPassword(email, DEFAULT_PASSWORD);
     await secondaryApp.auth().signOut();
     await db.collection('students').doc(roll).set({
@@ -198,9 +165,16 @@ document.getElementById('addStudentBtn').addEventListener('click', async () => {
     rollInput.value = '';
     await loadStudents();
   } catch (err) {
-    showAdminError(err.code === 'auth/email-already-in-use' ? 'That roll number already has an account.' : 'Something went wrong adding this student.');
+    console.error('Add student failed:', err);
+    if (err.code === 'auth/email-already-in-use') {
+      showAdminError('That roll number already has an account.');
+    } else if (err.code === 'permission-denied') {
+      showAdminError('Permission denied — the Firestore security rules may not be published yet.');
+    } else {
+      showAdminError('Something went wrong: ' + err.message);
+    }
   } finally {
-    await secondaryApp.delete();
+    if (secondaryApp) await secondaryApp.delete();
   }
 });
 </script>

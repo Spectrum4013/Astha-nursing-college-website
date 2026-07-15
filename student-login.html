@@ -6,6 +6,9 @@
 <title>Student Login — Aastha School of Nursing</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://www.gstatic.com">
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com">
+<link rel="preconnect" href="https://firestore.googleapis.com">
 <link rel="icon" type="image/svg+xml" href="assets/logo-mark.svg">
 </head>
 <body>
@@ -21,7 +24,7 @@
 <main class="section">
   <div class="wrap auth-wrap">
     <div class="auth-card">
-      <p class="eyebrow">Student Login</p>
+      <p class="eyebrow">Login</p>
       <h2>Sign in</h2>
       <div id="loginMsg" class="form-msg error"></div>
       <form id="loginForm">
@@ -31,7 +34,10 @@
         </div>
         <div class="field">
           <label for="password">Password</label>
-          <input type="password" id="password" autocomplete="current-password" required>
+          <div class="field-password">
+            <input type="password" id="password" autocomplete="current-password" required>
+            <button type="button" class="pw-toggle">Show</button>
+          </div>
         </div>
         <button type="submit" class="btn btn-primary btn-block">Log In</button>
       </form>
@@ -47,6 +53,7 @@
 <script>
 const form = document.getElementById('loginForm');
 const msgEl = document.getElementById('loginMsg');
+setupPasswordToggles();
 
 function showError(text){
   msgEl.textContent = text;
@@ -61,9 +68,17 @@ form.addEventListener('submit', async (e) => {
   const password = document.getElementById('password').value;
   if (!roll || !password) { showError('Enter your roll number and password.'); return; }
 
-  const email = rollToEmail(roll);
+  const isAdmin = roll.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  const email = isAdmin ? ADMIN_EMAIL : rollToEmail(roll);
+
   try {
-    const cred = await auth.signInWithEmailAndPassword(email, password);
+    await auth.signInWithEmailAndPassword(email, password);
+
+    if (isAdmin) {
+      window.location.href = 'admin.html';
+      return;
+    }
+
     const doc = await db.collection('students').doc(roll).get();
 
     if (!doc.exists) {

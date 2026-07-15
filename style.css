@@ -450,3 +450,29 @@ p{ margin:0 0 1em; color:var(--ink-soft); font-weight:450; }
   color:#fff; text-decoration:none; font-size:.9rem; font-weight:500;
 }
 .simple-nav a:hover, .simple-nav .logout-link:hover{ text-decoration:underline; }
+
+/* Password show/hide toggle */
+.field-password{ position:relative; }
+.field-password input{ padding-right:64px; }
+.pw-toggle{
+  position:absolute; right:12px; top:50%; transform:translateY(-50%);
+  background:none; border:none; cursor:pointer;
+  font-size:.8rem; font-weight:600; color:var(--red-dark);
+  font-family:var(--font-body); padding:4px 6px;
+}
+.pw-toggle:hover{ text-decoration:underline; }
+
+/* Hanging "Notes Inside" sign — swings off the Student Login button */
+.nav-login-wrap{ position:relative; display:inline-block; }
+.hanging-sign{
+  position:absolute; top:100%; right:2px;
+  transform-origin:top center;
+  animation:sign-swing 3.5s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes sign-swing{
+  0%, 100%{ transform:rotate(-5deg); }
+  50%{ transform:rotate(5deg); }
+}
+@media (max-width: 860px){ .hanging-sign{ display:none; } }
+@media (prefers-reduced-motion: reduce){ .hanging-sign{ animation:none; } }
