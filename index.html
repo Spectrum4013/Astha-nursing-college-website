@@ -13,13 +13,12 @@
 </head>
 <body>
 
-<div class="pulse-cursor-line" aria-hidden="true"></div>
+<div class="lightbox-overlay" id="lightboxOverlay"><img id="lightboxImg" src="" alt=""></div>
 
 <header class="site-header">
   <div class="wrap header-inner">
-    <a href="#top" class="brand">
-      <img src="assets/logo-mark.svg" alt="" class="brand-mark-img" width="38" height="38">
-      <span class="brand-text">Aastha School of Nursing</span>
+    <a href="index.html" class="brand">
+      <span class="brand-text">Aastha Nursing</span>
     </a>
     <nav class="main-nav" id="mainNav">
       <a href="#about">About</a>
@@ -52,20 +51,20 @@
   <section class="hero">
     <div class="wrap hero-inner">
       <div class="hero-copy">
-        <p class="eyebrow">MSBNPE Affiliated &middot; Est. 2011 &middot; Osmanabad (Dharashiv)</p>
-        <h1>Nursing careers built on <em>steady hands</em> and a fair start.</h1>
-        <p class="hero-sub">A GNM diploma programme run by Shri Sharada Shikshan Sanstha, for students across the Osmanabad region who want a real shot at a nursing career — without a city-sized fee.</p>
-        <div class="hero-actions">
+        <p class="eyebrow reveal">MSBNPE Affiliated &middot; Est. 2011 &middot; Osmanabad (Dharashiv)</p>
+        <h1 class="reveal">Nursing careers built on <em>steady hands</em> and a fair start.</h1>
+        <p class="hero-sub reveal">A GNM diploma programme run by Shri Sharada Shikshan Sanstha, for students across the Osmanabad region who want a real shot at a nursing career — without a city-sized fee.</p>
+        <div class="hero-actions reveal">
           <a href="#courses" class="btn btn-primary">See the GNM Course</a>
           <a href="#contact" class="btn btn-ghost">Plan a Visit</a>
         </div>
       </div>
-      <div class="hero-card">
+      <div class="hero-card reveal">
         <div class="hero-photo">
           <img src="assets/hero.jpg" alt="Aastha School of Nursing campus" class="hero-photo-img">
         </div>
         <div class="hero-stat">
-          <span class="stat-num">₹36,000</span>
+          <span class="stat-num" data-count-to="36000" data-prefix="₹">₹36,000</span>
           <span class="stat-label">/ year — GNM diploma</span>
         </div>
       </div>
@@ -79,17 +78,17 @@
   <section id="about" class="section">
     <div class="wrap about-grid">
       <div class="about-text">
-        <p class="eyebrow">About Us</p>
-        <h2>Educating nurses for the hospitals that need them most.</h2>
-        <p>Aastha School of Nursing was established in 2011 as a General Nursing &amp; Midwifery (GNM) school serving the Dharashiv (Osmanabad) district. We exist for a simple reason: this region needs more trained nurses, and the students here deserve a college that doesn't price them out.</p>
-        <p>We're affiliated with the Maharashtra State Board of Nursing &amp; Paramedical Education (MSBNPE), run by Shri Sharada Shikshan Sanstha, with an approved annual intake of 20 seats for the GNM programme.</p>
-        <div class="mini-stats">
-          <div><span class="mini-num">2011</span><span class="mini-label">Founded</span></div>
-          <div><span class="mini-num">20</span><span class="mini-label">Seats / year</span></div>
-          <div><span class="mini-num">3 yr</span><span class="mini-label">GNM diploma</span></div>
+        <p class="eyebrow reveal">About Us</p>
+        <h2 class="reveal">Educating nurses for the hospitals that need them most.</h2>
+        <p class="reveal">Aastha School of Nursing was established in 2011 as a General Nursing &amp; Midwifery (GNM) school serving the Dharashiv (Osmanabad) district. We exist for a simple reason: this region needs more trained nurses, and the students here deserve a college that doesn't price them out.</p>
+        <p class="reveal">We're affiliated with the Maharashtra State Board of Nursing &amp; Paramedical Education (MSBNPE), run by Shri Sharada Shikshan Sanstha, with an approved annual intake of 20 seats for the GNM programme.</p>
+        <div class="mini-stats reveal-stagger">
+          <div><span class="mini-num" data-count-to="2011">2011</span><span class="mini-label">Founded</span></div>
+          <div><span class="mini-num" data-count-to="20">20</span><span class="mini-label">Seats / year</span></div>
+          <div><span class="mini-num" data-count-to="3" data-suffix=" yr">3 yr</span><span class="mini-label">GNM diploma</span></div>
         </div>
       </div>
-      <div class="about-side">
+      <div class="about-side reveal">
         <blockquote>
           "As a nurse, we dedicate ourselves to being there for our patients' lives — that starts with how we train our students."
         </blockquote>
@@ -104,11 +103,11 @@
   <!-- COURSES -->
   <section id="courses" class="section section-alt">
     <div class="wrap">
-      <p class="eyebrow">Courses &amp; Services</p>
-      <h2>The GNM Diploma — 3 years, subject by subject.</h2>
-      <p class="section-sub">General Nursing &amp; Midwifery (GNM) is a 3-year diploma course. Here's exactly what's covered, year by year.</p>
+      <p class="eyebrow reveal">Courses &amp; Services</p>
+      <h2 class="reveal">The GNM Diploma — 3 years, subject by subject.</h2>
+      <p class="section-sub reveal">General Nursing &amp; Midwifery (GNM) is a 3-year diploma course. Here's exactly what's covered, year by year.</p>
 
-      <div class="year-cards">
+      <div class="year-cards reveal-stagger">
         <div class="year-card">
           <span class="year-num">01</span>
           <h3>First Year</h3>
@@ -142,9 +141,9 @@
         </div>
       </div>
 
-      <div class="fee-callout">
+      <div class="fee-callout reveal">
         <div>
-          <span class="fee-amount">₹36,000</span>
+          <span class="fee-amount" data-count-to="36000" data-prefix="₹">₹36,000</span>
           <span class="fee-caption">total course fee — among the most affordable GNM programmes in the region</span>
         </div>
         <p>Scholarships are available for students from reserved-category and lower-income backgrounds. Talk to us before ruling the course out on fees alone.</p>
@@ -155,9 +154,9 @@
   <!-- WHY US -->
   <section id="why-us" class="section">
     <div class="wrap">
-      <p class="eyebrow">Why Choose Us</p>
-      <h2>Small college, close attention.</h2>
-      <div class="why-grid">
+      <p class="eyebrow reveal">Why Choose Us</p>
+      <h2 class="reveal">Small college, close attention.</h2>
+      <div class="why-grid reveal-stagger">
         <div class="why-card">
           <h3>Experienced faculty</h3>
           <p>Our teaching staff hold nursing degrees and postgraduate qualifications, with real clinical experience behind the classroom time.</p>
@@ -184,9 +183,9 @@
   <!-- GALLERY -->
   <section id="gallery" class="section section-alt">
     <div class="wrap">
-      <p class="eyebrow">Campus Gallery</p>
-      <h2>A look around Aastha.</h2>
-      <div class="gallery-grid">
+      <p class="eyebrow reveal">Campus Gallery</p>
+      <h2 class="reveal">A look around Aastha.</h2>
+      <div class="gallery-grid reveal-stagger">
         <div class="gallery-item"><img src="assets/gallery/gallery-01.jpg" alt="Aastha School of Nursing campus"></div>
         <div class="gallery-item"><img src="assets/gallery/gallery-02.jpg" alt="Aastha School of Nursing campus"></div>
         <div class="gallery-item"><img src="assets/gallery/gallery-03.jpg" alt="Aastha School of Nursing campus"></div>
@@ -201,9 +200,9 @@
   <section id="contact" class="section">
     <div class="wrap contact-grid">
       <div>
-        <p class="eyebrow">Contact</p>
-        <h2>Come see the campus, or just ask a question.</h2>
-        <ul class="contact-list">
+        <p class="eyebrow reveal">Contact</p>
+        <h2 class="reveal">Come see the campus, or just ask a question.</h2>
+        <ul class="contact-list reveal">
           <li><strong>Address:</strong> Prerna Nagar, Behind Tawade Complex, Osmanabad (Dharashiv), Maharashtra – 413501</li>
           <li><strong>Run by:</strong> Shri Sharada Shikshan Sanstha</li>
           <li><strong>Phone:</strong> <a href="tel:+912472222260">(02472)-222260/62, 8605522731, 9763189489, 9422203243</a></li>
@@ -211,7 +210,7 @@
         </ul>
         <a href="#" class="btn btn-primary">Enquire About Admission</a>
       </div>
-      <div class="map-embed">
+      <div class="map-embed reveal">
         <iframe title="Aastha School of Nursing location" src="https://www.google.com/maps?q=Samata+Colony+Rd,+Samta+Colony,+Dharashiv,+Maharashtra+413501&output=embed" width="100%" height="320" style="border:0;" loading="lazy"></iframe>
     </div>
   </section>
@@ -221,7 +220,10 @@
 <footer class="site-footer">
   <div class="wrap footer-inner">
     <p>&copy; <span id="year"></span> Aastha School of Nursing, Osmanabad. Run by Shri Sharada Shikshan Sanstha.</p>
-    <a href="student-login.html">Student Login</a>
+    <div style="display:flex; gap:20px; align-items:center;">
+      <a href="student-login.html">Student Login</a>
+      <a href="mailto:vanwechaitanya@gmail.com">Found a bug? Report it</a>
+    </div>
   </div>
 </footer>
 

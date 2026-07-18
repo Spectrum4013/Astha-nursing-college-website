@@ -15,8 +15,7 @@
 <header class="site-header">
   <div class="wrap header-inner">
     <a href="index.html" class="brand">
-      <img src="assets/logo-mark.svg" alt="" class="brand-mark-img" width="38" height="38">
-      <span class="brand-text">Aastha School of Nursing</span>
+      <span class="brand-text">Aastha Nursing</span>
     </a>
     <nav class="simple-nav">
       <span class="logout-link" id="logoutBtn" style="color:#fff;">Log Out</span>
@@ -57,9 +56,23 @@
 
 <main class="section" id="checkingView">
   <div class="wrap">
-    <p>Checking access...</p>
+    <p style="color:rgba(255,255,255,.7);">Checking access...</p>
   </div>
 </main>
+
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <h3>Delete this student?</h3>
+    <p>This permanently removes <strong id="deleteRollLabel"></strong> from the system and blocks their login. This can't be undone. Type the roll number below to confirm.</p>
+    <div class="field">
+      <input type="text" id="deleteConfirmInput" placeholder="Type roll number to confirm" autocomplete="off">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="deleteCancelBtn">Cancel</button>
+      <button class="btn btn-danger" id="deleteConfirmBtn" disabled>Delete Student</button>
+    </div>
+  </div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
@@ -126,7 +139,15 @@ function renderTable(list){
       <td>${statusPill}</td>
       <td>${pwPill}</td>
       <td>${dateStr}</td>
-      <td><button class="toggle-btn" onclick="toggleAccess('${s.roll}', ${s.active === false})">${toggleLabel}</button></td>
+      <td style="display:flex; gap:8px; align-items:center;">
+        <button class="toggle-btn" onclick="toggleAccess('${s.roll}', ${s.active === false})">${toggleLabel}</button>
+        <div class="row-menu">
+          <button class="row-menu-btn" onclick="toggleRowMenu(this)">⋮</button>
+          <div class="row-menu-dropdown">
+            <button onclick="openDeleteModal('${s.roll}')">Delete Student</button>
+          </div>
+        </div>
+      </td>
     </tr>`;
   }).join('');
 }
@@ -140,6 +161,62 @@ async function toggleAccess(roll, makeActive){
   await db.collection('students').doc(roll).update({ active: makeActive });
   await loadStudents();
 }
+
+// ---- Row three-dot menu ----
+function toggleRowMenu(btn){
+  const dropdown = btn.nextElementSibling;
+  const wasOpen = dropdown.classList.contains('open');
+  document.querySelectorAll('.row-menu-dropdown.open').forEach(d => d.classList.remove('open'));
+  if (!wasOpen) dropdown.classList.add('open');
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.row-menu')) {
+    document.querySelectorAll('.row-menu-dropdown.open').forEach(d => d.classList.remove('open'));
+  }
+});
+
+// ---- Delete confirmation modal ----
+const deleteModal = document.getElementById('deleteModal');
+const deleteRollLabel = document.getElementById('deleteRollLabel');
+const deleteConfirmInput = document.getElementById('deleteConfirmInput');
+const deleteConfirmBtn = document.getElementById('deleteConfirmBtn');
+const deleteCancelBtn = document.getElementById('deleteCancelBtn');
+let rollPendingDelete = null;
+
+function openDeleteModal(roll){
+  document.querySelectorAll('.row-menu-dropdown.open').forEach(d => d.classList.remove('open'));
+  rollPendingDelete = roll;
+  deleteRollLabel.textContent = roll;
+  deleteConfirmInput.value = '';
+  deleteConfirmBtn.disabled = true;
+  deleteModal.classList.add('open');
+  deleteConfirmInput.focus();
+}
+function closeDeleteModal(){
+  deleteModal.classList.remove('open');
+  rollPendingDelete = null;
+}
+deleteCancelBtn.addEventListener('click', closeDeleteModal);
+deleteModal.addEventListener('click', (e) => {
+  if (e.target === deleteModal) closeDeleteModal();
+});
+deleteConfirmInput.addEventListener('input', () => {
+  deleteConfirmBtn.disabled = deleteConfirmInput.value.trim() !== rollPendingDelete;
+});
+deleteConfirmBtn.addEventListener('click', async () => {
+  if (deleteConfirmInput.value.trim() !== rollPendingDelete) return;
+  deleteConfirmBtn.disabled = true;
+  deleteConfirmBtn.textContent = 'Deleting...';
+  try {
+    await db.collection('students').doc(rollPendingDelete).delete();
+    closeDeleteModal();
+    await loadStudents();
+  } catch (err) {
+    showAdminError('Could not delete: ' + err.message);
+  } finally {
+    deleteConfirmBtn.textContent = 'Delete Student';
+  }
+});
 
 document.getElementById('addStudentBtn').addEventListener('click', async () => {
   const rollInput = document.getElementById('newRoll');
@@ -178,5 +255,6 @@ document.getElementById('addStudentBtn').addEventListener('click', async () => {
   }
 });
 </script>
+<script src="script.js"></script>
 </body>
 </html>
