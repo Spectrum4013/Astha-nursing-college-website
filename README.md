@@ -1,55 +1,91 @@
 # Aastha School of Nursing — Website
 
-Level 1 build: static homepage, no login yet. Plain HTML/CSS/JS — no build tools, no framework, nothing to install.
+Official website for Aastha School of Nursing, Osmanabad (Dharashiv), Maharashtra —
+built and maintained by me as part of my first-year B.Tech CSE rural internship.
 
-## Files
-- `index.html` — homepage
-- `style.css` — all styling
-- `script.js` — nav toggle + scroll animation
-- `student-login.html` — placeholder page (real login comes in Level 3)
-- `/assets/` — put real campus photos here
+**Live site:** https://aasthanursingdharashiv.com
 
-## Preview it locally
-Just double-click `index.html` — it opens directly in your browser. No server needed for this stage.
+---
 
-## Swap in real photos
-1. Drop your photos into `/assets/gallery/` (e.g. `photo1.jpg`, `photo2.jpg`...)
-2. In `index.html`, find the `.gallery-item.ph` divs and the `.hero-photo` div
-3. Replace `<span>Photo 1</span>` with `<img src="assets/gallery/photo1.jpg" alt="...">`
+## Project background
 
-## Deploy for free (recommended: GitHub Pages)
-1. Create a GitHub account if you don't have one: github.com
-2. Create a new repository, e.g. `aastha-nursing-website`
-3. From this folder, run:
-   ```
-   git add .
-   git commit -m "Level 1: homepage"
-   git remote add origin https://github.com/YOUR_USERNAME/aastha-nursing-website.git
-   git push -u origin main
-   ```
-4. On GitHub: repo → Settings → Pages → Source → select `main` branch → Save
-5. Your site goes live at `https://YOUR_USERNAME.github.io/aastha-nursing-website/`
+Aastha School of Nursing's old website had gone offline (expired domain), so as my
+assigned rural-internship deliverable, I rebuilt it from scratch — real content, real
+domain, real backend for student logins — rather than just a static mockup. This repo
+is the actual live production site, not a class exercise.
 
-## Connecting a paid domain (~₹400–800/year)
-1. Buy the domain from Hostinger, Namecheap, or GoDaddy (Namecheap/Hostinger are usually cheapest for `.in`)
-2. In your domain registrar's DNS settings, add:
-   - Four `A` records pointing to GitHub Pages IPs: `185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`
-   - A `CNAME` record: `www` → `YOUR_USERNAME.github.io`
-3. In your GitHub repo → Settings → Pages → add your custom domain, e.g. `aasthanursing.in`
-4. Wait 15 min–24 hrs for DNS to propagate. HTTPS is free and automatic via GitHub.
+## What I built, briefly
 
-## Cost summary
-| Item | Cost |
+- A fully responsive marketing site (homepage, about, courses, gallery, contact) for a
+  real institution, using their actual course structure, fees, and campus photos.
+- A student portal with **roll-number-based login**, forced password setup on first
+  login, and a self-service password-change page.
+- An **admin dashboard** for non-technical staff to add new students, search records,
+  revoke/restore access (e.g. for unpaid fees), and delete accounts — with a
+  type-to-confirm safeguard against accidental deletion.
+- Server-side security via **Firestore security rules**, not just client-side checks,
+  so access control can't be bypassed by editing the page.
+- Custom domain setup end-to-end: DNS configuration, GitHub Pages hosting, HTTPS.
+
+## Skills/tools this project covers
+
+`HTML/CSS/JavaScript (vanilla, no framework)` · `Firebase Authentication` ·
+`Firestore (NoSQL database + security rules)` · `Git/GitHub` · `GitHub Pages deployment` ·
+`DNS & custom domain configuration` · `responsive/mobile-first design` ·
+`basic UX for a non-technical admin user`
+
+---
+
+## What this is (technical)
+
+A static website (plain HTML/CSS/JS, no build tools) hosted for free on GitHub Pages, with a
+student login system powered by Firebase (Authentication + Firestore) for gated access to
+course notes.
+
+## Pages
+
+| File | Purpose |
 |---|---|
-| Domain (.in, 1 year) | ₹400–800 |
-| Hosting (GitHub Pages) | ₹0 |
-| SSL certificate | ₹0 (automatic) |
-| **Total** | **~₹400–800/year** |
+| `index.html` | Homepage — hero, about, gallery, contact |
+| `about.html` | Full about page + why-choose-us |
+| `courses.html` | GNM course breakdown, year by year, fees |
+| `student-login.html` | Shared login for students and admin (roll number or admin email) |
+| `notes.html` | Protected notes page — only accessible when logged in |
+| `settings.html` | Student password change |
+| `force-password-change.html` | Forces new students to set a real password on first login |
+| `admin.html` | Admin dashboard — add/search/revoke/delete student accounts |
 
-## Roadmap — what's next
-- **Level 2** ✅ this build — static homepage
-- **Level 3** — Student login using Firebase Authentication (free tier): login page → notes/video-links page
-- **Level 4** — Password change page (built into Firebase Auth, minimal extra code)
-- **Level 5** — Polish: favicon, meta tags for WhatsApp sharing previews, Google Analytics
+## How student login works
 
-When you're ready for Level 3, come back and just say "let's do the student login" — don't need to re-paste this whole site, I'll pick up from these files.
+- Each student's **roll number is their username** and cannot be changed.
+- New students are added via the Admin Dashboard (`admin.html`) with a default password.
+- On first login, they're forced to set their own password before reaching notes.
+- Admin can revoke a student's access (e.g. for unpaid fees) without deleting their account,
+  or fully delete an account via the confirm-by-typing-the-roll-number modal.
+
+## Tech stack
+
+- **Hosting:** GitHub Pages (free)
+- **Domain:** aasthanursingdharashiv.com (via Namecheap)
+- **Auth + Database:** Firebase Authentication + Firestore (free Spark tier)
+- **Fonts:** Cinzel (headings), Inter (body), Space Mono (numbers/labels) — via Google Fonts
+- No frameworks, no build step — just open the HTML files directly, or push to `main` to deploy.
+
+## Local setup / making changes
+
+1. Edit the HTML/CSS/JS files directly.
+2. `firebase-config.js` holds the connection details to the Firebase project — don't need to
+   touch this unless the Firebase project itself changes.
+3. `firestore.rules.txt` — reference copy of the security rules. If ever changed, the real
+   rules must also be re-pasted into **Firebase Console → Firestore Database → Rules → Publish**;
+   editing this file alone does nothing on its own.
+4. Push to `main` — GitHub Pages redeploys automatically within a minute or two.
+
+## Admin access
+
+Admin logs in through the same page as students (`student-login.html`), using the admin email
+instead of a roll number, which routes to the Admin Dashboard automatically.
+
+## Found a bug?
+
+Email vanwechaitanya@gmail.com.
