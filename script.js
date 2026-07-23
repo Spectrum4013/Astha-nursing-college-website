@@ -84,3 +84,19 @@ if (lightboxOverlay && lightboxImg) {
     lightboxOverlay.classList.remove('open');
   });
 }
+
+// ---- Reusable button loading-state helper ----
+// setBtnLoading(buttonEl, true)  -> shows spinner, disables button
+// setBtnLoading(buttonEl, false, "Original Text") -> restores it
+function setBtnLoading(btn, loading, restoreText){
+  if (!btn) return;
+  if (loading) {
+    if (!btn.dataset.originalText) btn.dataset.originalText = btn.textContent;
+    btn.classList.add('btn-loading');
+    btn.disabled = true;
+  } else {
+    btn.classList.remove('btn-loading');
+    btn.disabled = false;
+    btn.textContent = restoreText || btn.dataset.originalText || btn.textContent;
+  }
+}

@@ -93,6 +93,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   msgEl.classList.remove('show');
+  const submitBtn = form.querySelector('button[type="submit"]');
 
   const currentPassword = document.getElementById('currentPassword').value;
   const newPassword = document.getElementById('newPassword').value;
@@ -106,6 +107,7 @@ form.addEventListener('submit', async (e) => {
   const user = auth.currentUser;
   const cred = firebase.auth.EmailAuthProvider.credential(user.email, currentPassword);
 
+  setBtnLoading(submitBtn, true);
   try {
     await user.reauthenticateWithCredential(cred);
     await user.updatePassword(newPassword);
@@ -117,6 +119,8 @@ form.addEventListener('submit', async (e) => {
     } else {
       showError('Something went wrong. Please try again.');
     }
+  } finally {
+    setBtnLoading(submitBtn, false, 'Update Password');
   }
 });
 </script>

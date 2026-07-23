@@ -592,3 +592,42 @@ p{ margin:0 0 1em; color:var(--ink-soft); font-weight:450; }
 }
 .contact-list a{ color:var(--red); text-decoration:underline; }
 .eyebrow{ color:var(--red); }
+
+/* ============================================
+   Loading spinner state for buttons (login, add/delete student, etc.)
+   ============================================ */
+.btn-loading{ color:transparent !important; pointer-events:none; position:relative; }
+.btn-loading::after{
+  content:""; position:absolute; top:50%; left:50%; width:18px; height:18px;
+  margin:-9px 0 0 -9px; border:2.5px solid rgba(255,255,255,.35); border-top-color:#fff;
+  border-radius:50%; animation:btn-spin .7s linear infinite;
+}
+@keyframes btn-spin{ to{ transform:rotate(360deg); } }
+
+/* Admin search box — was unstyled before, now a real search field */
+.admin-search{
+  padding:11px 16px; border-radius:999px; border:1.5px solid var(--line);
+  font-family:var(--font-body); font-size:.9rem; background:var(--card); color:var(--ink);
+}
+.admin-search:focus{ outline:none; border-color:var(--red); }
+
+/* Small "back to home" link used on the About/Courses standalone pages */
+.back-home{
+  display:inline-flex; align-items:center; gap:6px;
+  font-size:.9rem; font-weight:600; color:var(--red);
+  text-decoration:none; margin-bottom:18px;
+}
+.back-home:hover{ text-decoration:underline; }
+
+@media (prefers-reduced-motion: reduce){
+  .btn-loading::after{ animation:none; }
+}
+
+.about-highlights{ list-style:none; padding:0; margin:16px 0 0; }
+.about-highlights li{
+  position:relative; padding-left:22px; margin-bottom:10px;
+  color:var(--ink-soft); font-size:.92rem;
+}
+.about-highlights li::before{
+  content:"✓"; position:absolute; left:0; color:var(--red); font-weight:700;
+}

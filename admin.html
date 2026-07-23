@@ -29,11 +29,8 @@
     <h2>Manage Students</h2>
 
     <div class="admin-toolbar">
-      <input type="text" id="searchBox" class="admin-search" placeholder="Search roll number...">
-      <div class="admin-add">
-        <input type="text" id="newRoll" placeholder="New roll number">
-        <button id="addStudentBtn" class="btn btn-primary">+ Add Student</button>
-      </div>
+      <input type="text" id="searchBox" class="admin-search" placeholder="Search roll number... (press Enter)">
+      <button id="openAddModalBtn" class="btn btn-primary">+ Add Student</button>
     </div>
     <div id="adminMsg" class="form-msg error"></div>
 
@@ -60,6 +57,22 @@
   </div>
 </main>
 
+<!-- Add Student modal -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal-box">
+    <h3>Add a new student</h3>
+    <p>Enter their roll number. They'll log in with this roll number and the default password, then be forced to set their own.</p>
+    <div class="field">
+      <input type="text" id="newRoll" placeholder="Roll number" autocomplete="off">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="addCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="addConfirmBtn">Add Student</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Student modal -->
 <div class="modal-overlay" id="deleteModal">
   <div class="modal-box">
     <h3>Delete this student?</h3>
@@ -102,7 +115,6 @@ auth.onAuthStateChanged((user) => {
     dashboardView.style.display = '';
     loadStudents();
   } else {
-    // Not logged in as admin — send to the shared login page
     window.location.href = 'student-login.html';
   }
 });
@@ -122,7 +134,7 @@ async function loadStudents(){
 function renderTable(list){
   const tbody = document.getElementById('studentTableBody');
   if (list.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5">No students added yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5">No students found.</td></tr>';
     return;
   }
   tbody.innerHTML = list.map(s => {
@@ -140,7 +152,7 @@ function renderTable(list){
       <td>${pwPill}</td>
       <td>${dateStr}</td>
       <td style="display:flex; gap:8px; align-items:center;">
-        <button class="toggle-btn" onclick="toggleAccess('${s.roll}', ${s.active === false})">${toggleLabel}</button>
+        <button class="toggle-btn" onclick="toggleAccess('${s.roll}', ${s.active === false}, this)">${toggleLabel}</button>
         <div class="row-menu">
           <button class="row-menu-btn" onclick="toggleRowMenu(this)">⋮</button>
           <div class="row-menu-dropdown">
@@ -152,14 +164,26 @@ function renderTable(list){
   }).join('');
 }
 
-document.getElementById('searchBox').addEventListener('input', (e) => {
-  const q = e.target.value.trim().toLowerCase();
+// ---- Search (live-filter + Enter key both work) ----
+const searchBox = document.getElementById('searchBox');
+function runSearch(){
+  const q = searchBox.value.trim().toLowerCase();
   renderTable(allStudents.filter(s => s.roll.toLowerCase().includes(q)));
+}
+searchBox.addEventListener('input', runSearch);
+searchBox.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); runSearch(); }
 });
 
-async function toggleAccess(roll, makeActive){
-  await db.collection('students').doc(roll).update({ active: makeActive });
-  await loadStudents();
+async function toggleAccess(roll, makeActive, btn){
+  setBtnLoading(btn, true);
+  try {
+    await db.collection('students').doc(roll).update({ active: makeActive });
+    await loadStudents();
+  } catch (err) {
+    showAdminError('Could not update access: ' + err.message);
+    setBtnLoading(btn, false, makeActive ? 'Restore Access' : 'Revoke Access');
+  }
 }
 
 // ---- Row three-dot menu ----
@@ -172,6 +196,62 @@ function toggleRowMenu(btn){
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.row-menu')) {
     document.querySelectorAll('.row-menu-dropdown.open').forEach(d => d.classList.remove('open'));
+  }
+});
+
+// ---- Add Student modal ----
+const addModal = document.getElementById('addModal');
+const newRollInput = document.getElementById('newRoll');
+const addConfirmBtn = document.getElementById('addConfirmBtn');
+const addCancelBtn = document.getElementById('addCancelBtn');
+const openAddModalBtn = document.getElementById('openAddModalBtn');
+
+function openAddModal(){
+  newRollInput.value = '';
+  addModal.classList.add('open');
+  newRollInput.focus();
+}
+function closeAddModal(){
+  addModal.classList.remove('open');
+}
+openAddModalBtn.addEventListener('click', openAddModal);
+addCancelBtn.addEventListener('click', closeAddModal);
+addModal.addEventListener('click', (e) => { if (e.target === addModal) closeAddModal(); });
+newRollInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addConfirmBtn.click(); } });
+
+addConfirmBtn.addEventListener('click', async () => {
+  const roll = newRollInput.value.trim();
+  if (!roll) { showAdminError('Enter a roll number.'); return; }
+
+  setBtnLoading(addConfirmBtn, true);
+  let secondaryApp;
+  try {
+    const existing = await db.collection('students').doc(roll).get();
+    if (existing.exists) { showAdminError('That roll number already exists.'); return; }
+
+    const email = rollToEmail(roll);
+    secondaryApp = firebase.initializeApp(firebaseConfig, 'Secondary-' + Date.now());
+    await secondaryApp.auth().createUserWithEmailAndPassword(email, DEFAULT_PASSWORD);
+    await secondaryApp.auth().signOut();
+    await db.collection('students').doc(roll).set({
+      active: true,
+      mustChangePassword: true,
+      dateAdded: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    closeAddModal();
+    await loadStudents();
+  } catch (err) {
+    console.error('Add student failed:', err);
+    if (err.code === 'auth/email-already-in-use') {
+      showAdminError('That roll number already has an account.');
+    } else if (err.code === 'permission-denied') {
+      showAdminError('Permission denied — the Firestore security rules may not be published yet.');
+    } else {
+      showAdminError('Something went wrong: ' + err.message);
+    }
+  } finally {
+    if (secondaryApp) await secondaryApp.delete();
+    setBtnLoading(addConfirmBtn, false, 'Add Student');
   }
 });
 
@@ -205,8 +285,7 @@ deleteConfirmInput.addEventListener('input', () => {
 });
 deleteConfirmBtn.addEventListener('click', async () => {
   if (deleteConfirmInput.value.trim() !== rollPendingDelete) return;
-  deleteConfirmBtn.disabled = true;
-  deleteConfirmBtn.textContent = 'Deleting...';
+  setBtnLoading(deleteConfirmBtn, true);
   try {
     await db.collection('students').doc(rollPendingDelete).delete();
     closeDeleteModal();
@@ -214,44 +293,7 @@ deleteConfirmBtn.addEventListener('click', async () => {
   } catch (err) {
     showAdminError('Could not delete: ' + err.message);
   } finally {
-    deleteConfirmBtn.textContent = 'Delete Student';
-  }
-});
-
-document.getElementById('addStudentBtn').addEventListener('click', async () => {
-  const rollInput = document.getElementById('newRoll');
-  const roll = rollInput.value.trim();
-  if (!roll) { showAdminError('Enter a roll number.'); return; }
-
-  let secondaryApp;
-  try {
-    const existing = await db.collection('students').doc(roll).get();
-    if (existing.exists) { showAdminError('That roll number already exists.'); return; }
-
-    const email = rollToEmail(roll);
-    // Use a secondary, throwaway Firebase app instance so creating this user
-    // doesn't sign the admin out of their own session.
-    secondaryApp = firebase.initializeApp(firebaseConfig, 'Secondary-' + Date.now());
-    await secondaryApp.auth().createUserWithEmailAndPassword(email, DEFAULT_PASSWORD);
-    await secondaryApp.auth().signOut();
-    await db.collection('students').doc(roll).set({
-      active: true,
-      mustChangePassword: true,
-      dateAdded: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    rollInput.value = '';
-    await loadStudents();
-  } catch (err) {
-    console.error('Add student failed:', err);
-    if (err.code === 'auth/email-already-in-use') {
-      showAdminError('That roll number already has an account.');
-    } else if (err.code === 'permission-denied') {
-      showAdminError('Permission denied — the Firestore security rules may not be published yet.');
-    } else {
-      showAdminError('Something went wrong: ' + err.message);
-    }
-  } finally {
-    if (secondaryApp) await secondaryApp.delete();
+    setBtnLoading(deleteConfirmBtn, false, 'Delete Student');
   }
 });
 </script>
