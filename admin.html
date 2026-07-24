@@ -164,7 +164,6 @@ function renderTable(list){
   }).join('');
 }
 
-// ---- Search (live-filter + Enter key both work) ----
 const searchBox = document.getElementById('searchBox');
 function runSearch(){
   const q = searchBox.value.trim().toLowerCase();
@@ -186,7 +185,6 @@ async function toggleAccess(roll, makeActive, btn){
   }
 }
 
-// ---- Row three-dot menu ----
 function toggleRowMenu(btn){
   const dropdown = btn.nextElementSibling;
   const wasOpen = dropdown.classList.contains('open');
@@ -199,7 +197,6 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// ---- Add Student modal ----
 const addModal = document.getElementById('addModal');
 const newRollInput = document.getElementById('newRoll');
 const addConfirmBtn = document.getElementById('addConfirmBtn');
@@ -255,7 +252,6 @@ addConfirmBtn.addEventListener('click', async () => {
   }
 });
 
-// ---- Delete confirmation modal ----
 const deleteModal = document.getElementById('deleteModal');
 const deleteRollLabel = document.getElementById('deleteRollLabel');
 const deleteConfirmInput = document.getElementById('deleteConfirmInput');

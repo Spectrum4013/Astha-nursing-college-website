@@ -86,8 +86,6 @@ if (lightboxOverlay && lightboxImg) {
 }
 
 // ---- Reusable button loading-state helper ----
-// setBtnLoading(buttonEl, true)  -> shows spinner, disables button
-// setBtnLoading(buttonEl, false, "Original Text") -> restores it
 function setBtnLoading(btn, loading, restoreText){
   if (!btn) return;
   if (loading) {

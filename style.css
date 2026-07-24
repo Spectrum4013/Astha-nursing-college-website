@@ -604,24 +604,18 @@ p{ margin:0 0 1em; color:var(--ink-soft); font-weight:450; }
 }
 @keyframes btn-spin{ to{ transform:rotate(360deg); } }
 
-/* Admin search box — was unstyled before, now a real search field */
 .admin-search{
   padding:11px 16px; border-radius:999px; border:1.5px solid var(--line);
   font-family:var(--font-body); font-size:.9rem; background:var(--card); color:var(--ink);
 }
 .admin-search:focus{ outline:none; border-color:var(--red); }
 
-/* Small "back to home" link used on the About/Courses standalone pages */
 .back-home{
   display:inline-flex; align-items:center; gap:6px;
   font-size:.9rem; font-weight:600; color:var(--red);
   text-decoration:none; margin-bottom:18px;
 }
 .back-home:hover{ text-decoration:underline; }
-
-@media (prefers-reduced-motion: reduce){
-  .btn-loading::after{ animation:none; }
-}
 
 .about-highlights{ list-style:none; padding:0; margin:16px 0 0; }
 .about-highlights li{
@@ -630,4 +624,29 @@ p{ margin:0 0 1em; color:var(--ink-soft); font-weight:450; }
 }
 .about-highlights li::before{
   content:"✓"; position:absolute; left:0; color:var(--red); font-weight:700;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .btn-loading::after{ animation:none; }
+}
+
+/* About section — horizontal checklist row (replaces the old vertical side-card list) */
+.about-highlights-row{
+  display:flex; flex-wrap:wrap; gap:12px 32px; margin:22px 0 0;
+}
+.about-highlights-row li{ padding-left:22px; margin-bottom:0; }
+@media (max-width: 760px){
+  .about-highlights-row{ flex-direction:column; gap:10px; }
+}
+
+/* About section — horizontal/inline on desktop, boxed card on mobile (matches old design) */
+.about-mobile-card{ /* no special styling on desktop — stays plain/inline */ }
+@media (max-width: 760px){
+  .about-mobile-card{
+    background:var(--card); border-top:3px solid var(--marigold);
+    border-radius:var(--radius); padding:24px; margin-top:24px;
+    box-shadow:0 10px 26px rgba(42,25,22,.1);
+  }
+  .about-mobile-card .about-highlights-row{ flex-direction:column; gap:10px; }
+  .about-mobile-card .mini-stats{ margin-top:18px; }
 }
